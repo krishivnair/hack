@@ -1,0 +1,133 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": ["hello", "hi", "hey", "good morning", "good evening", "namaste", "vanakkam"],
+      "responses": [
+        "Namaste! I'm AgroCure's farming assistant. Ask me about crop diseases, treatment, or what to grow this season.",
+        "Hello farmer! How can I help you today? You can ask about diseases, crops, or weather advice."
+      ]
+    },
+    {
+      "tag": "yellow_leaves",
+      "patterns": ["yellow leaves", "leaves turning yellow", "yellowing", "pale leaves", "chlorosis"],
+      "responses": [
+        "Yellow leaves often indicate Nitrogen deficiency or early fungal infection. Check if: (1) Yellowing starts from older lower leaves → Nitrogen deficiency, apply urea. (2) Yellow spots with brown edges → Fungal infection, apply Mancozeb. (3) Yellowing with webbing on underside → Spider mites, spray neem oil."
+      ]
+    },
+    {
+      "tag": "curling_leaves",
+      "patterns": ["curling leaves", "leaves curling", "rolled leaves", "leaf curl", "twisted leaves"],
+      "responses": [
+        "Leaf curling can be caused by: (1) Virus infection (Tomato Leaf Curl Virus) — remove infected plants, control whiteflies with imidacloprid. (2) Water stress — check soil moisture and irrigation. (3) Herbicide drift — no treatment, wait for new growth. (4) Broad mite attack — apply Abamectin or neem oil."
+      ]
+    },
+    {
+      "tag": "brown_spots",
+      "patterns": ["brown spots", "dark spots", "spots on leaves", "lesions", "brown patches"],
+      "responses": [
+        "Brown spots usually indicate: (1) Early Blight (Alternaria) — dark concentric rings, apply Mancozeb. (2) Bacterial leaf spot — water-soaked then brown, use copper bactericide. (3) Fungal infection — apply systemic fungicide like Propiconazole. Send a photo for accurate diagnosis!"
+      ]
+    },
+    {
+      "tag": "wilting",
+      "patterns": ["wilting", "drooping", "plant falling", "stem rot", "plant dying"],
+      "responses": [
+        "Wilting causes: (1) Overwatering/root rot — reduce watering, improve drainage, apply Trichoderma. (2) Fusarium/Verticillium wilt — no chemical cure, remove affected plants, practice crop rotation. (3) Water stress/drought — irrigate immediately. (4) Bacterial wilt — look for white slime in cut stem, no treatment, remove plant."
+      ]
+    },
+    {
+      "tag": "summer_crops",
+      "patterns": ["what to grow in summer", "summer crop", "zaid crop", "hot season crop", "heat tolerant crop"],
+      "responses": [
+        "For hot summer (Zaid season), consider: Mung bean (Moong), Watermelon, Cucumber, Bitter gourd, Cluster beans, or Cow pea. These are heat-tolerant, fast-maturing crops with good market demand. Ensure drip irrigation is available."
+      ]
+    },
+    {
+      "tag": "kharif_crops",
+      "patterns": ["kharif crop", "monsoon crop", "what to grow in rain", "rainy season crop"],
+      "responses": [
+        "Top Kharif crops for monsoon season: (1) Rice — if you have clay soil and good water. (2) Maize — versatile, medium water. (3) Groundnut — high profit, low water once established. (4) Soybean — good for black soil regions. (5) Millet (Bajra) — drought-prone areas. Use our Crop Recommender for personalized suggestions!"
+      ]
+    },
+    {
+      "tag": "rabi_crops",
+      "patterns": ["rabi crop", "winter crop", "what to grow after monsoon", "cold season crop"],
+      "responses": [
+        "Best Rabi crops: (1) Wheat — stable MSP, most of North India. (2) Potato — high yield, good for loamy soil. (3) Tomato — high cash value. (4) Onion — volatile but profitable. (5) Chickpea (Chana) — drought tolerant, nitrogen-fixing. Use drip irrigation to save water in dry winter months."
+      ]
+    },
+    {
+      "tag": "fungicide",
+      "patterns": ["fungicide", "fungal disease", "which fungicide", "antifungal spray"],
+      "responses": [
+        "Common fungicides and their uses: (1) Mancozeb — broad-spectrum, preventive, for blight and rust. (2) Propiconazole — systemic, for rusts and blights. (3) Copper-based (Bordeaux) — bacterial and fungal, organic-friendly. (4) Azoxystrobin — premium systemic, long protection. Always rotate between fungicide groups to prevent resistance."
+      ]
+    },
+    {
+      "tag": "organic_farming",
+      "patterns": ["organic", "natural remedy", "no chemical", "neem", "bio pesticide", "organic treatment"],
+      "responses": [
+        "Organic solutions: (1) Neem oil (3ml/L water) — broad-spectrum pest and disease control. (2) Bordeaux mixture (copper sulfate + lime) — fungal and bacterial diseases. (3) Trichoderma viride — soil-borne disease prevention. (4) Jeevamrut — soil health booster. (5) Panchagavya — immunity booster spray. Organic takes more time but improves long-term soil health!"
+      ]
+    },
+    {
+      "tag": "nitrogen_deficiency",
+      "patterns": ["nitrogen deficiency", "npk", "fertilizer", "pale green", "stunted growth", "no growth"],
+      "responses": [
+        "For Nitrogen deficiency (pale/yellow older leaves, slow growth): Apply urea (46% N) at 25–30 kg/acre as top dressing. Or use DAP (18-46-0) at base dressing. Organic option: Green manure or compost application. Foliar spray of 1% urea solution gives fast results. Test soil before heavy fertilizer application."
+      ]
+    },
+    {
+      "tag": "pest_control",
+      "patterns": ["pest", "insect", "bug", "aphid", "whitefly", "thrips", "mite"],
+      "responses": [
+        "Common pests and solutions: (1) Aphids — spray insecticidal soap or neem oil. (2) Whiteflies — yellow sticky traps + imidacloprid. (3) Thrips — spinosad spray + reflective mulch. (4) Spider mites — neem oil or Abamectin, avoid dry hot conditions. Always apply pesticides in early morning or evening to reduce bee harm."
+      ]
+    },
+    {
+      "tag": "weather_farming",
+      "patterns": ["weather", "rain", "drought", "flood", "humidity", "temperature effect on crop"],
+      "responses": [
+        "Weather tips: (1) High humidity (>70%) — increase fungicide spray frequency, improve drainage. (2) Drought — mulch soil, use drip irrigation, switch to drought-tolerant varieties. (3) Heavy rain — check drainage, apply potassium fertilizer to strengthen plants. (4) Extreme heat — shade netting for vegetables, increase irrigation frequency."
+      ]
+    },
+    {
+      "tag": "irrigation",
+      "patterns": ["irrigation", "watering", "drip", "how much water", "when to water"],
+      "responses": [
+        "Smart irrigation guide: (1) Morning watering is best — less evaporation, leaves dry by evening reducing disease risk. (2) Drip irrigation saves 40–60% water vs. flood irrigation. (3) Sandy soil — frequent, light watering. Clay soil — less frequent, deeper watering. (4) Check moisture at 3-inch depth before irrigating. Overwatering causes root rot and fungal disease!"
+      ]
+    },
+    {
+      "tag": "soil_health",
+      "patterns": ["soil health", "soil test", "soil ph", "improve soil", "compost"],
+      "responses": [
+        "Soil health tips: (1) Ideal pH for most crops: 6.0–7.0. Add lime to raise pH, sulfur to lower it. (2) Add organic matter (compost/FYM) every season. (3) Rotate crops to prevent nutrient depletion. (4) Trichoderma inoculation suppresses soil pathogens. Get a soil test done every 2–3 years for accurate fertilizer recommendations."
+      ]
+    },
+    {
+      "tag": "scan_disease",
+      "patterns": ["scan", "check disease", "detect disease", "photo", "upload image", "take photo"],
+      "responses": [
+        "To detect crop disease: Use the 📸 Scan tab to upload a clear photo of the affected leaf. Make sure the leaf fills most of the frame and lighting is good. Our AI will identify the disease and suggest treatment within seconds!"
+      ]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": ["bye", "goodbye", "thank you", "thanks", "ok done"],
+      "responses": [
+        "Happy farming! 🌾 Come back anytime for crop advice.",
+        "Best of luck with your harvest! Feel free to ask if you need more help."
+      ]
+    },
+    {
+      "tag": "fallback",
+      "patterns": [],
+      "responses": [
+        "I'm not sure about that. Could you rephrase? You can ask me about: crop diseases, treatments, what to grow this season, pest control, or irrigation tips.",
+        "I didn't quite get that. Try asking about specific crop problems, organic treatments, or seasonal crop recommendations!"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# AgroCure Backend Dependencies
+# Install with: pip install -r requirements.txt
+
+# ── API Framework ─────────────────────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9       # For file uploads
+
+# ── ML / Image Processing ─────────────────────────────────────────────────────
+tensorflow==2.16.1             # Or swap for torch if using PyTorch in Colab
+Pillow==10.3.0
+numpy==1.26.4
+
+# ── HTTP Client (weather API) ─────────────────────────────────────────────────
+httpx==0.27.0
+
+# ── Optional LLM integrations ─────────────────────────────────────────────────
+# Uncomment whichever you're using:
+# google-generativeai==0.5.4   # Gemini
+# openai==1.30.0                # OpenAI
+
+# ── Dev utilities ─────────────────────────────────────────────────────────────
+python-dotenv==1.0.1           # Load .env for API keys

@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroCure — AI Farming Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --green:#1a7a4a;--green-light:#e8f5ee;--green-mid:#2ea06a;--green-dark:#0f5232;
+    --amber:#d97706;--amber-light:#fef3c7;
+    --red:#dc2626;--red-light:#fee2e2;
+    --blue:#1d4ed8;--blue-light:#eff6ff;
+    --bg:#f8faf8;--card:#fff;--border:#e2e8e4;--text:#1a2e1f;--muted:#6b7a72;
+    --radius:16px;--radius-sm:10px;--shadow:0 2px 16px rgba(0,0,0,.07);
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+  /* ── SIDEBAR ─────────────────────────────────────────────────────────── */
+  .sidebar{background:var(--green-dark);padding:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .sidebar-logo{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+  .logo-text{font-family:'Playfair Display',serif;font-size:22px;color:#fff;font-weight:600;letter-spacing:-.3px}
+  .logo-sub{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+  .nav{padding:16px 12px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;cursor:pointer;margin-bottom:4px;transition:all .2s;color:rgba(255,255,255,.65);font-size:14px;font-weight:400;border:none;background:none;width:100%;text-align:left}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+  .nav-item.active{background:rgba(255,255,255,.15);color:#fff;font-weight:500}
+  .nav-icon{width:18px;height:18px;opacity:.8;flex-shrink:0}
+  .nav-item.active .nav-icon{opacity:1}
+  .sidebar-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.1)}
+  .weather-card{background:rgba(255,255,255,.08);border-radius:10px;padding:14px;font-size:12px;color:rgba(255,255,255,.8)}
+  .weather-temp{font-size:24px;font-weight:500;color:#fff;line-height:1}
+  .weather-label{margin-top:4px;color:rgba(255,255,255,.55);font-size:11px}
+  .weather-row{display:flex;justify-content:space-between;margin-top:10px;font-size:11px}
+  .weather-stat{text-align:center}
+  .weather-stat-val{color:#fff;font-weight:500}
+
+  /* ── MAIN ────────────────────────────────────────────────────────────── */
+  .main{overflow-y:auto}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:24px 32px 0;margin-bottom:28px}
+  .page-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:500;letter-spacing:-.3px}
+  .topbar-right{display:flex;align-items:center;gap:12px}
+  .badge-online{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);background:var(--green-light);padding:6px 14px;border-radius:20px;font-weight:500}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green-mid);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:500}
+
+  /* ── PAGES ───────────────────────────────────────────────────────────── */
+  .page{display:none;padding:0 32px 32px;animation:fadeIn .25s ease}
+  .page.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ── STAT CARDS ──────────────────────────────────────────────────────── */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;transition:transform .2s}
+  .stat-card:hover{transform:translateY(-2px)}
+  .stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:500;margin-bottom:10px}
+  .stat-val{font-size:28px;font-weight:500;line-height:1;letter-spacing:-1px}
+  .stat-change{font-size:12px;margin-top:6px;display:flex;align-items:center;gap:4px}
+  .up{color:#059669}.down{color:var(--red)}
+  .stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+
+  /* ── CONTENT GRID ────────────────────────────────────────────────────── */
+  .content-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;margin-bottom:20px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px}
+  .card-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+  .card-title span{color:var(--muted);font-size:12px;font-weight:400;cursor:pointer}
+
+  /* ── SCAN ────────────────────────────────────────────────────────────── */
+  .scan-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:36px 24px;text-align:center;cursor:pointer;transition:all .3s;background:var(--bg)}
+  .scan-zone:hover,.scan-zone.dragover{border-color:var(--green-mid);background:var(--green-light)}
+  .scan-icon{width:48px;height:48px;background:var(--green-light);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .scan-title{font-size:15px;font-weight:500;margin-bottom:6px}
+  .scan-sub{font-size:12px;color:var(--muted)}
+  .scan-btn{background:var(--green);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-top:14px;font-family:inherit;transition:background .2s}
+  .scan-btn:hover{background:var(--green-dark)}
+
+  /* ── DISEASE RESULT ──────────────────────────────────────────────────── */
+  .result-hidden{display:none}
+  .disease-result{border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+  .result-header{padding:16px 18px;display:flex;align-items:center;gap:14px}
+  .result-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+  .result-crop{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:500}
+  .result-disease{font-size:16px;font-weight:500;margin-top:2px}
+  .severity-bar{height:4px;background:#e5e7eb;border-radius:2px;overflow:hidden;margin-top:14px}
+  .severity-fill{height:100%;border-radius:2px;transition:width .6s ease}
+  .result-body{padding:14px 18px;background:#fafaf8}
+  .result-section{margin-bottom:12px}
+  .result-section-title{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:500;margin-bottom:6px}
+  .result-item{font-size:13px;color:var(--text);padding:5px 0;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+  .result-item::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green-mid);margin-top:6px;flex-shrink:0}
+
+  /* ── HEALTH CHART ────────────────────────────────────────────────────── */
+  .health-ring{display:flex;align-items:center;gap:20px;margin-bottom:16px}
+  .ring-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+  .ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring-pct{font-size:18px;font-weight:500;line-height:1}
+  .ring-sub{font-size:10px;color:var(--muted)}
+  .health-legend{flex:1}
+  .legend-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .legend-item:last-child{border:none}
+  .legend-dot{width:8px;height:8px;border-radius:50%;margin-right:8px;display:inline-block}
+  .legend-name{display:flex;align-items:center;color:var(--text)}
+  .legend-val{font-weight:500;font-size:13px}
+
+  /* ── ACTIVITY FEED ───────────────────────────────────────────────────── */
+  .activity-list{display:flex;flex-direction:column;gap:0}
+  .activity-item{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+  .activity-item:last-child{border:none}
+  .activity-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+  .activity-content{flex:1}
+  .activity-title{font-size:13px;font-weight:500;margin-bottom:2px}
+  .activity-sub{font-size:12px;color:var(--muted)}
+  .activity-time{font-size:11px;color:var(--muted);white-space:nowrap;margin-top:2px}
+
+  /* ── RECOMMEND ───────────────────────────────────────────────────────── */
+  .recommend-filters{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+  .filter-select{border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;font-family:inherit;color:var(--text);background:var(--card);cursor:pointer;outline:none;min-width:140px}
+  .filter-select:focus{border-color:var(--green-mid)}
+  .crop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .crop-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s;cursor:pointer}
+  .crop-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .crop-card.featured{border-color:var(--green-mid);border-width:2px}
+  .crop-emoji{font-size:28px;margin-bottom:12px}
+  .crop-name{font-size:16px;font-weight:500;margin-bottom:4px}
+  .crop-days{font-size:12px;color:var(--muted);margin-bottom:14px}
+  .profit-bar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-bottom:8px}
+  .profit-fill{height:100%;border-radius:3px;background:var(--green-mid)}
+  .crop-profit{font-size:13px;font-weight:500;color:var(--green)}
+  .profit-label{font-size:11px;color:var(--muted)}
+  .crop-tags{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .crop-tag{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500}
+  .tag-water{background:var(--blue-light);color:var(--blue)}
+  .tag-season{background:var(--green-light);color:var(--green-dark)}
+  .tag-drought{background:var(--amber-light);color:var(--amber)}
+
+  /* ── CHATBOT ─────────────────────────────────────────────────────────── */
+  .chat-wrap{display:grid;grid-template-columns:1fr 300px;gap:20px;height:calc(100vh - 140px)}
+  .chat-main{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+  .msg{max-width:78%;animation:fadeIn .2s ease}
+  .msg-bot{align-self:flex-start}
+  .msg-user{align-self:flex-end}
+  .msg-bubble{padding:11px 15px;border-radius:14px;font-size:14px;line-height:1.55}
+  .msg-bot .msg-bubble{background:#f1f5f0;color:var(--text);border-radius:4px 14px 14px 14px}
+  .msg-user .msg-bubble{background:var(--green);color:#fff;border-radius:14px 14px 4px 14px}
+  .msg-time{font-size:10px;color:var(--muted);margin-top:4px;padding:0 4px}
+  .msg-user .msg-time{text-align:right}
+  .chat-input-row{display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--border)}
+  .chat-input{flex:1;border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:14px;font-family:inherit;outline:none;resize:none;line-height:1.5}
+  .chat-input:focus{border-color:var(--green-mid)}
+  .chat-send{background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;transition:background .2s;white-space:nowrap}
+  .chat-send:hover{background:var(--green-dark)}
+  .chat-sidebar-inner{display:flex;flex-direction:column;gap:16px}
+  .quick-questions{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+  .quick-title{font-size:13px;font-weight:500;margin-bottom:12px}
+  .quick-btn{width:100%;text-align:left;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:12px;font-family:inherit;cursor:pointer;margin-bottom:6px;transition:all .2s;color:var(--text);line-height:1.4}
+  .quick-btn:hover{background:var(--green-light);border-color:var(--green-mid)}
+  .typing{display:none;align-items:center;gap:4px;padding:8px 0}
+  .typing.show{display:flex}
+  .typing-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:typing-bounce .8s infinite}
+  .typing-dot:nth-child(2){animation-delay:.15s}
+  .typing-dot:nth-child(3){animation-delay:.3s}
+  @keyframes typing-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+
+  /* ── ANALYTICS ───────────────────────────────────────────────────────── */
+  .analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+  .bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;font-size:13px}
+  .bar-label{width:120px;color:var(--text);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-track{flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px;transition:width .8s ease}
+  .bar-val{width:36px;text-align:right;font-weight:500;color:var(--muted)}
+  .risk-gauge{display:flex;gap:20px;justify-content:space-around;margin-top:8px}
+  .gauge-item{text-align:center}
+  .gauge-circle{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:500;margin:0 auto 8px;border:3px solid}
+  .gauge-name{font-size:11px;color:var(--muted);text-align:center}
+  .gauge-val{font-size:13px;font-weight:500;margin-top:2px}
+
+  /* ── OUTBREAK BANNER ─────────────────────────────────────────────────── */
+  .outbreak-banner{background:#fef3c7;border:1px solid #f59e0b;border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+  .outbreak-icon{font-size:20px}
+  .outbreak-text{flex:1}
+  .outbreak-title{font-size:13px;font-weight:500;color:#92400e}
+  .outbreak-sub{font-size:12px;color:#b45309;margin-top:2px}
+
+  /* ── RESPONSIVE ──────────────────────────────────────────────────────── */
+  @media(max-width:900px){
+    .app{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .stats-grid{grid-template-columns:repeat(2,1fr)}
+    .content-grid{grid-template-columns:1fr}
+    .crop-grid{grid-template-columns:repeat(2,1fr)}
+    .chat-wrap{grid-template-columns:1fr;height:auto}
+    .analytics-grid{grid-template-columns:1fr}
+    .page{padding:0 16px 24px}
+    .topbar{padding:20px 16px 0}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ════════════════════════════ SIDEBAR ════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">🌿 AgroCure</div>
+    <div class="logo-sub">AI Farming Intelligence</div>
+  </div>
+  <nav class="nav">
+    <button class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" onclick="showPage('scan',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Scan Crop
+    </button>
+    <button class="nav-item" onclick="showPage('recommend',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Crop Advisor
+    </button>
+    <button class="nav-item" onclick="showPage('analytics',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Analytics
+    </button>
+    <button class="nav-item" onclick="showPage('chat',this)">
+      <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      Ask AgroCure
+    </button>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="weather-card" id="weatherCard">
+      <div class="weather-temp" id="wTemp">--°C</div>
+      <div id="wDesc">Loading weather...</div>
+      <div class="weather-label" id="wHint"></div>
+      <div class="weather-row">
+        <div class="weather-stat"><div class="weather-stat-val" id="wHumidity">--%</div><div>Humidity</div></div>
+        <div class="weather-stat"><div class="weather-stat-val" id="wWind">-- km/h</div><div>Wind</div></div>
+        <div class="weather-stat"><div class="weather-stat-val" id="wRain">0mm</div><div>Rain</div></div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ════════════════════════════ MAIN ════════════════════════════════════ -->
+<main class="main">
+
+<!-- ── DASHBOARD ──────────────────────────────────────────────────────── -->
+<div id="page-dashboard" class="page active">
+  <div class="topbar">
+    <div>
+      <div class="page-title">Good morning, Farmer 👋</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px" id="dashDate">Loading...</div>
+    </div>
+    <div class="topbar-right">
+      <div class="badge-online"><div class="dot"></div>AI Online</div>
+      <div class="avatar">AK</div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e8f5ee"><svg width="18" height="18" fill="none" stroke="#1a7a4a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      <div class="stat-label">Farm Health</div>
+      <div class="stat-val" style="color:var(--green)">74%</div>
+      <div class="stat-change up">↑ 6% from last week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#eff6ff"><svg width="18" height="18" fill="none" stroke="#1d4ed8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/></svg></div>
+      <div class="stat-label">Total Scans</div>
+      <div class="stat-val">142</div>
+      <div class="stat-change up">↑ 23 this week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fee2e2"><svg width="18" height="18" fill="none" stroke="#dc2626" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
+      <div class="stat-label">Diseases Found</div>
+      <div class="stat-val" style="color:var(--red)">18</div>
+      <div class="stat-change down">↑ 3 new today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fef3c7"><svg width="18" height="18" fill="none" stroke="#d97706" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+      <div class="stat-label">Est. Profit/Acre</div>
+      <div class="stat-val" style="color:var(--amber)">₹42k</div>
+      <div class="stat-change up">↑ ₹3k optimized</div>
+    </div>
+  </div>
+
+  <div class="outbreak-banner">
+    <div class="outbreak-icon">⚠️</div>
+    <div class="outbreak-text">
+      <div class="outbreak-title">Possible Late Blight Outbreak Detected</div>
+      <div class="outbreak-sub">38% of recent tomato scans show Late Blight · High humidity conditions increase risk</div>
+    </div>
+    <button onclick="showPage('scan',document.querySelectorAll('.nav-item')[1])" style="background:#f59e0b;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:inherit">Scan Now →</button>
+  </div>
+
+  <div class="content-grid">
+    <div class="card">
+      <div class="card-title">Recent Disease Detections <span>View all</span></div>
+      <div class="activity-list">
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--red)"></div>
+          <div class="activity-content">
+            <div class="activity-title">Tomato Late Blight — Severe</div>
+            <div class="activity-sub">Field B · Confidence 94% · Treatment: Mancozeb</div>
+          </div>
+          <div class="activity-time">2h ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--amber)"></div>
+          <div class="activity-content">
+            <div class="activity-title">Corn Common Rust — Moderate</div>
+            <div class="activity-sub">Field A · Confidence 81% · Treatment: Propiconazole</div>
+          </div>
+          <div class="activity-time">5h ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--green-mid)"></div>
+          <div class="activity-content">
+            <div class="activity-title">Potato — Healthy</div>
+            <div class="activity-sub">Field C · No issues detected</div>
+          </div>
+          <div class="activity-time">8h ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--amber)"></div>
+          <div class="activity-content">
+            <div class="activity-title">Tomato Early Blight — Mild</div>
+            <div class="activity-sub">Field B · Confidence 73% · Treatment: Azoxystrobin</div>
+          </div>
+          <div class="activity-time">1d ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background:var(--green-mid)"></div>
+          <div class="activity-content">
+            <div class="activity-title">Tomato — Healthy</div>
+            <div class="activity-sub">Field D · No issues detected</div>
+          </div>
+          <div class="activity-time">1d ago</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Crop Health Breakdown <span>This month</span></div>
+      <div class="health-ring">
+        <div class="ring-wrap">
+          <svg viewBox="0 0 80 80" width="80" height="80">
+            <circle cx="40" cy="40" r="34" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+            <circle cx="40" cy="40" r="34" fill="none" stroke="#2ea06a" stroke-width="8" stroke-dasharray="213.6" stroke-dashoffset="55.5" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+          </svg>
+          <div class="ring-label"><div class="ring-pct">74%</div><div class="ring-sub">healthy</div></div>
+        </div>
+        <div class="health-legend">
+          <div class="legend-item"><span class="legend-name"><span class="legend-dot" style="background:#2ea06a"></span>Healthy</span><span class="legend-val" style="color:var(--green)">74%</span></div>
+          <div class="legend-item"><span class="legend-name"><span class="legend-dot" style="background:var(--amber)"></span>Moderate</span><span class="legend-val" style="color:var(--amber)">16%</span></div>
+          <div class="legend-item"><span class="legend-name"><span class="legend-dot" style="background:var(--red)"></span>Critical</span><span class="legend-val" style="color:var(--red)">10%</span></div>
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <div class="bar-row"><span class="bar-label">Tomato</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--green-mid)"></div></div><span class="bar-val">68%</span></div>
+        <div class="bar-row"><span class="bar-label">Potato</span><div class="bar-track"><div class="bar-fill" style="width:85%;background:#2ea06a"></div></div><span class="bar-val">85%</span></div>
+        <div class="bar-row"><span class="bar-label">Corn</span><div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--green-mid)"></div></div><span class="bar-val">72%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCAN CROP ───────────────────────────────────────────────────────── -->
+<div id="page-scan" class="page">
+  <div class="topbar">
+    <div class="page-title">Scan Crop 📸</div>
+  </div>
+  <div class="content-grid">
+    <div class="card">
+      <div class="card-title">Upload Leaf Image</div>
+      <div class="scan-zone" id="scanZone"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleDrop(event)">
+        <div class="scan-icon">
+          <svg width="24" height="24" fill="none" stroke="#1a7a4a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <div class="scan-title">Drop a leaf photo here</div>
+        <div class="scan-sub">Or click to browse · JPEG, PNG, WEBP · Max 10MB</div>
+        <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+        <button class="scan-btn" onclick="document.getElementById('fileInput').click()">Choose Image</button>
+      </div>
+      <div id="previewWrap" style="display:none;margin-top:16px">
+        <img id="previewImg" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover;border:1px solid var(--border)">
+        <button class="scan-btn" style="margin-top:12px;width:100%" onclick="runScan()">🔍 Analyse with AI</button>
+      </div>
+      <div id="scanLoading" style="display:none;text-align:center;padding:24px;color:var(--muted);font-size:14px">
+        <div class="typing show" style="justify-content:center;margin-bottom:8px">
+          <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+        </div>
+        Analysing leaf with AI model...
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Diagnosis Result</div>
+      <div id="noResult" style="text-align:center;padding:40px 20px;color:var(--muted)">
+        <div style="font-size:36px;margin-bottom:12px">🌿</div>
+        <div style="font-size:14px">Upload a leaf image to get an instant AI diagnosis</div>
+        <div style="font-size:12px;margin-top:8px;color:var(--muted)">Supports Tomato, Potato, Corn</div>
+      </div>
+      <div id="resultCard" class="result-hidden">
+        <div class="disease-result">
+          <div class="result-header">
+            <div class="result-icon" id="resultIcon">🍅</div>
+            <div style="flex:1">
+              <div class="result-crop" id="resultCrop">TOMATO</div>
+              <div class="result-disease" id="resultDisease">Late Blight</div>
+              <div style="margin-top:6px;display:flex;align-items:center;gap:8px">
+                <span id="severityBadge" style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500"></span>
+                <span id="confidenceText" style="font-size:11px;color:var(--muted)"></span>
+              </div>
+              <div class="severity-bar" style="margin-top:10px"><div class="severity-fill" id="severityFill"></div></div>
+            </div>
+          </div>
+          <div class="result-body">
+            <div class="result-section">
+              <div class="result-section-title">Treatment</div>
+              <div id="treatmentList"></div>
+            </div>
+            <div class="result-section">
+              <div class="result-section-title">Prevention</div>
+              <div id="preventionList"></div>
+            </div>
+            <div class="result-section">
+              <div class="result-section-title">Organic Option</div>
+              <div id="organicText" style="font-size:13px;padding:8px 10px;background:var(--green-light);border-radius:8px;color:var(--green-dark)"></div>
+            </div>
+          </div>
+        </div>
+        <button onclick="showPage('chat',document.querySelectorAll('.nav-item')[4])" style="width:100%;margin-top:12px;background:var(--green-light);color:var(--green-dark);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">
+          💬 Ask AgroCure about this disease →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CROP ADVISOR ────────────────────────────────────────────────────── -->
+<div id="page-recommend" class="page">
+  <div class="topbar">
+    <div>
+      <div class="page-title">Crop Advisor 🌾</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px">Filter by your farm conditions to see the best crops</div>
+    </div>
+  </div>
+  <div class="recommend-filters">
+    <select class="filter-select" id="fSeason" onchange="loadRecommend()">
+      <option value="">All Seasons</option>
+      <option value="kharif" selected>Kharif (Monsoon)</option>
+      <option value="rabi">Rabi (Winter)</option>
+      <option value="zaid">Zaid (Summer)</option>
+    </select>
+    <select class="filter-select" id="fSoil" onchange="loadRecommend()">
+      <option value="">Any Soil</option>
+      <option value="loamy" selected>Loamy</option>
+      <option value="sandy">Sandy</option>
+      <option value="clay">Clay</option>
+      <option value="red">Red Soil</option>
+      <option value="black">Black Soil</option>
+    </select>
+    <select class="filter-select" id="fWater" onchange="loadRecommend()">
+      <option value="">Any Water</option>
+      <option value="low">Low Water</option>
+      <option value="medium" selected>Medium Water</option>
+      <option value="high">High Water</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:9px 14px;border:1px solid var(--border);border-radius:8px;background:var(--card)">
+      <input type="checkbox" id="fDrought" onchange="loadRecommend()" style="accent-color:var(--green)"> Drought Region
+    </label>
+  </div>
+  <div class="crop-grid" id="cropGrid"></div>
+</div>
+
+<!-- ── ANALYTICS ──────────────────────────────────────────────────────── -->
+<div id="page-analytics" class="page">
+  <div class="topbar">
+    <div class="page-title">Farm Analytics 📊</div>
+  </div>
+  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card">
+      <div class="stat-label">Scans This Month</div>
+      <div class="stat-val">142</div>
+      <div class="stat-change up">↑ 34% vs last month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Confidence</div>
+      <div class="stat-val" style="color:var(--green)">87%</div>
+      <div class="stat-change up">Model accuracy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Treatment Success</div>
+      <div class="stat-val" style="color:var(--amber)">91%</div>
+      <div class="stat-change up">Reported improvement</div>
+    </div>
+  </div>
+  <div class="analytics-grid">
+    <div class="card">
+      <div class="card-title">Disease Distribution</div>
+      <div id="diseaseChart"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Outbreak Risk by Crop</div>
+      <div class="risk-gauge" id="riskGauge"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Weekly Scan Volume</div>
+      <div id="weeklyChart"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top Recommendations Given</div>
+      <div id="recChart"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CHATBOT ─────────────────────────────────────────────────────────── -->
+<div id="page-chat" class="page">
+  <div class="topbar">
+    <div class="page-title">Ask AgroCure 💬</div>
+  </div>
+  <div class="chat-wrap">
+    <div class="chat-main">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg msg-bot">
+          <div class="msg-bubble">🌿 Namaste! I'm AgroCure's AI farming assistant. Ask me anything — crop diseases, treatments, what to grow this season, pest control, irrigation tips, and more!</div>
+          <div class="msg-time">Now</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput" rows="1" placeholder="Ask about your crops..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+        <button class="chat-send" onclick="sendMsg()">Send →</button>
+      </div>
+    </div>
+    <div class="chat-sidebar-inner">
+      <div class="quick-questions">
+        <div class="quick-title">Quick questions</div>
+        <button class="quick-btn" onclick="quickAsk('My tomato leaves are turning yellow')">My tomato leaves are turning yellow</button>
+        <button class="quick-btn" onclick="quickAsk('What crops should I grow in Kharif season?')">What to grow in Kharif season?</button>
+        <button class="quick-btn" onclick="quickAsk('How to treat fungal disease organically?')">Organic fungal treatment?</button>
+        <button class="quick-btn" onclick="quickAsk('My potato plants are wilting')">My potato plants are wilting</button>
+        <button class="quick-btn" onclick="quickAsk('How to improve soil health?')">How to improve soil health?</button>
+        <button class="quick-btn" onclick="quickAsk('How often should I irrigate tomatoes?')">Irrigation tips for tomatoes?</button>
+      </div>
+      <div class="quick-questions">
+        <div class="quick-title">Context from last scan</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.8" id="chatContext">
+          <div><strong style="color:var(--text)">Crop:</strong> Tomato</div>
+          <div><strong style="color:var(--text)">Disease:</strong> Late Blight</div>
+          <div><strong style="color:var(--text)">Severity:</strong> <span style="color:var(--red)">Severe</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CONFIG — change BASE_URL to your backend when ready
+// ══════════════════════════════════════════════════════════════
+const BASE_URL = 'http://localhost:8000';
+//const USE_DEMO = true; // Set to false when backend is running
+const USE_DEMO = false; // flip this when your backend is running
+// ══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'analytics') renderAnalytics();
+  if (id === 'recommend') loadRecommend();
+}
+
+// ══════════════════════════════════════════════════════════════
+// DATE & WEATHER
+// ══════════════════════════════════════════════════════════════
+function initDate() {
+  const d = new Date();
+  const seasons = ['Rabi','Rabi','Rabi','Rabi','Kharif','Kharif','Kharif','Kharif','Kharif','Rabi','Rabi','Rabi'];
+  const season = seasons[d.getMonth()] + ' Season';
+  document.getElementById('dashDate').textContent =
+    d.toLocaleDateString('en-IN', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) + ' · ' + season;
+}
+
+function loadWeather() {
+  if (USE_DEMO) {
+    document.getElementById('wTemp').textContent = '28°C';
+    document.getElementById('wDesc').textContent = 'Partly Cloudy · Chennai';
+    document.getElementById('wHint').textContent = '⚠️ High humidity — monitor for fungal risk';
+    document.getElementById('wHumidity').textContent = '72%';
+    document.getElementById('wWind').textContent = '3.2 km/h';
+    document.getElementById('wRain').textContent = '0mm';
+    return;
+  }
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+      const w = await res.json();
+      document.getElementById('wTemp').textContent = w.temperature_c + '°C';
+      document.getElementById('wDesc').textContent = w.description + ' · ' + w.city;
+      document.getElementById('wHint').textContent = w.disease_risk_hint.factors[0] || '';
+      document.getElementById('wHumidity').textContent = w.humidity_pct + '%';
+      document.getElementById('wWind').textContent = w.wind_speed_ms + ' km/h';
+      document.getElementById('wRain').textContent = w.rainfall_mm_1h + 'mm';
+    } catch(e) { console.log('Weather fetch failed', e); }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCAN & DISEASE DETECTION
+// ══════════════════════════════════════════════════════════════
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('scanZone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('previewWrap').style.display = 'block';
+    document.getElementById('scanZone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+const DEMO_RESULTS = [
+  {label:'Tomato___Late_blight',confidence:0.94,crop:'Tomato',disease:'Late Blight',pathogen:'Phytophthora infestans',
+   treatment:['Apply Mancozeb (2.5g/L) every 7 days','Use copper-based fungicides as alternative','Remove and destroy infected parts immediately'],
+   prevention:['Avoid overhead irrigation — use drip','Improve field drainage','Plant resistant varieties (Mountain Magic)'],
+   organic:'Spray diluted neem oil (3ml/L) + baking soda solution weekly',urgency:'HIGH',emoji:'🍅'},
+  {label:'Tomato___Early_blight',confidence:0.82,crop:'Tomato',disease:'Early Blight',pathogen:'Alternaria solani',
+   treatment:['Apply Azoxystrobin or Difenoconazole','Spray Mancozeb every 10–14 days','Prune infected lower leaves'],
+   prevention:['Rotate crops every season','Mulch soil to prevent spore splash','Water at base of plant only'],
+   organic:'Compost tea spray + copper sulfate solution',urgency:'MEDIUM',emoji:'🍅'},
+  {label:'Corn_(maize)___Common_rust_',confidence:0.78,crop:'Corn',disease:'Common Rust',pathogen:'Puccinia sorghi',
+   treatment:['Apply Propiconazole at first sign','Early-season application is critical','Monitor weekly from tasseling'],
+   prevention:['Plant rust-resistant hybrids','Early planting to avoid peak season','Scout fields from tasseling onwards'],
+   organic:'Sulfur-based fungicide sprays',urgency:'MEDIUM',emoji:'🌽'},
+  {label:'Potato___Early_blight',confidence:0.86,crop:'Potato',disease:'Early Blight',pathogen:'Alternaria solani',
+   treatment:['Apply Chlorothalonil or Mancozeb','Spray every 7–10 days during humid conditions','Remove infected foliage promptly'],
+   prevention:['Use certified disease-free seed potatoes','Avoid water stress on plants','Rotate with non-solanaceous crops'],
+   organic:'Bacillus subtilis-based biocontrol sprays',urgency:'MEDIUM',emoji:'🥔'},
+  {label:'Tomato___healthy',confidence:0.97,crop:'Tomato',disease:null,pathogen:null,
+   treatment:[],prevention:['Maintain balanced NPK fertilization','Monitor weekly for early signs','Consistent watering schedule'],
+   organic:null,urgency:'NONE',emoji:'🍅'},
+];
+
+async function runScan() {
+  const fileInput = document.getElementById('fileInput');
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('scanLoading').style.display = 'block';
+  document.getElementById('noResult').style.display = 'none';
+  document.getElementById('resultCard').className = 'result-hidden';
+
+  if (!USE_DEMO && fileInput.files[0]) {
+    // ── REAL API CALL ──────────────────────────────────────────────────────
+    try {
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+      const res = await fetch(`${BASE_URL}/api/scan`, { method: 'POST', body: formData });
+      const data = await res.json();
+      const r = {
+        crop: data.diagnosis.crop,
+        disease: data.diagnosis.disease,
+        pathogen: data.diagnosis.pathogen || '',
+        confidence: data.scan_result.confidence,
+        treatment: data.recommendations.treatment,
+        prevention: data.recommendations.prevention,
+        organic: data.recommendations.organic_option,
+        urgency: data.severity.label.includes('Severe') ? 'HIGH' : data.severity.label.includes('Moderate') ? 'MEDIUM' : 'NONE',
+        emoji: data.diagnosis.crop === 'Tomato' ? '🍅' : data.diagnosis.crop === 'Potato' ? '🥔' : '🌽',
+      };
+      document.getElementById('scanLoading').style.display = 'none';
+      document.getElementById('previewWrap').style.display = 'block';
+      showResult(r);
+      updateChatContext(r);
+    } catch(e) {
+      document.getElementById('scanLoading').style.display = 'none';
+      document.getElementById('previewWrap').style.display = 'block';
+      alert('API error: ' + e.message + '\n\nMake sure your backend is running at ' + BASE_URL);
+    }
+  } else {
+    // ── DEMO MODE ─────────────────────────────────────────────────────────
+    setTimeout(() => {
+      const r = DEMO_RESULTS[Math.floor(Math.random() * DEMO_RESULTS.length)];
+      document.getElementById('scanLoading').style.display = 'none';
+      document.getElementById('previewWrap').style.display = 'block';
+      showResult(r);
+      updateChatContext(r);
+    }, 1800);
+  }
+}
+
+function showResult(r) {
+  document.getElementById('noResult').style.display = 'none';
+  document.getElementById('resultCard').className = '';
+
+  if (!r.disease) {
+    document.getElementById('resultIcon').textContent = r.emoji;
+    document.getElementById('resultCrop').textContent = r.crop.toUpperCase();
+    document.getElementById('resultDisease').textContent = 'Healthy — No Disease Detected';
+    document.getElementById('severityBadge').textContent = '✅ Healthy';
+    document.getElementById('severityBadge').style.cssText = 'font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;background:#dcfce7;color:#166534';
+    document.getElementById('confidenceText').textContent = 'Confidence: ' + (r.confidence * 100).toFixed(0) + '%';
+    document.getElementById('severityFill').style.cssText = 'width:95%;background:#22c55e';
+    document.getElementById('treatmentList').innerHTML = '<div style="font-size:13px;padding:8px;background:var(--green-light);border-radius:8px;color:var(--green-dark)">No treatment needed. Your crop looks healthy! Continue regular monitoring.</div>';
+    document.getElementById('preventionList').innerHTML = r.prevention.map(p => `<div class="result-item">${p}</div>`).join('');
+    document.getElementById('organicText').textContent = 'Great! Maintain regular neem oil preventive spray every 15 days.';
+    return;
+  }
+
+  const sevColor = r.urgency === 'HIGH' ? '#dc2626' : r.urgency === 'MEDIUM' ? '#d97706' : '#65a30d';
+  const sevBg = r.urgency === 'HIGH' ? '#fee2e2' : r.urgency === 'MEDIUM' ? '#fef3c7' : '#ecfccb';
+  const sevLabel = r.urgency === 'HIGH' ? '🔴 Severe' : r.urgency === 'MEDIUM' ? '🟠 Moderate' : '🟡 Mild';
+  const sevWidth = r.urgency === 'HIGH' ? '92' : r.urgency === 'MEDIUM' ? '60' : '35';
+
+  document.getElementById('resultIcon').textContent = r.emoji;
+  document.getElementById('resultCrop').textContent = r.crop.toUpperCase() + (r.pathogen ? ' · ' + r.pathogen : '');
+  document.getElementById('resultDisease').textContent = r.disease;
+  document.getElementById('severityBadge').textContent = sevLabel;
+  document.getElementById('severityBadge').style.cssText = `font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;background:${sevBg};color:${sevColor}`;
+  document.getElementById('confidenceText').textContent = 'Confidence: ' + (r.confidence * 100).toFixed(0) + '%';
+  document.getElementById('severityFill').style.cssText = `width:${sevWidth}%;background:${sevColor}`;
+  document.getElementById('treatmentList').innerHTML = r.treatment.map(t => `<div class="result-item">${t}</div>`).join('');
+  document.getElementById('preventionList').innerHTML = r.prevention.map(p => `<div class="result-item">${p}</div>`).join('');
+  document.getElementById('organicText').textContent = r.organic || 'No specific organic option on record — consult local agri extension officer.';
+}
+
+function updateChatContext(r) {
+  document.getElementById('chatContext').innerHTML = `
+    <div><strong style="color:var(--text)">Crop:</strong> ${r.crop}</div>
+    <div><strong style="color:var(--text)">Disease:</strong> ${r.disease || 'None — Healthy'}</div>
+    <div><strong style="color:var(--text)">Severity:</strong> <span style="color:${r.urgency==='HIGH'?'var(--red)':r.urgency==='MEDIUM'?'var(--amber)':'var(--green)'}">${r.urgency==='HIGH'?'Severe':r.urgency==='MEDIUM'?'Moderate':r.urgency==='NONE'?'Healthy':'Low'}</span></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// CROP RECOMMENDATION
+// ══════════════════════════════════════════════════════════════
+const CROPS = [
+  {name:'Tomato',emoji:'🍅',season:'kharif,rabi',soil:'loamy,sandy loam,red',water:'medium',drought:false,days:75,profit:46000,profitPct:85,score:95},
+  {name:'Groundnut',emoji:'🥜',season:'kharif,rabi',soil:'sandy loam,red,loamy',water:'low',drought:true,days:110,profit:52000,profitPct:95,score:90},
+  {name:'Maize',emoji:'🌽',season:'kharif,rabi,zaid',soil:'loamy,clay loam,black',water:'medium',drought:true,days:95,profit:28000,profitPct:60,score:78},
+  {name:'Chilli',emoji:'🌶️',season:'kharif,rabi',soil:'loamy,sandy loam,red',water:'medium',drought:false,days:130,profit:58000,profitPct:100,score:88},
+  {name:'Potato',emoji:'🥔',season:'rabi',soil:'loamy,sandy loam',water:'medium',drought:false,days:90,profit:25000,profitPct:55,score:72},
+  {name:'Pearl Millet',emoji:'🌾',season:'kharif',soil:'sandy,sandy loam,red',water:'low',drought:true,days:75,profit:9000,profitPct:25,score:60},
+  {name:'Onion',emoji:'🧅',season:'rabi,kharif',soil:'loamy,sandy loam,red',water:'medium',drought:false,days:120,profit:40000,profitPct:80,score:82},
+  {name:'Rice',emoji:'🌾',season:'kharif',soil:'clay,clay loam,black',water:'high',drought:false,days:120,profit:22000,profitPct:48,score:65},
+  {name:'Chickpea',emoji:'🫘',season:'rabi',soil:'loamy,black,red',water:'low',drought:true,days:100,profit:20000,profitPct:45,score:68},
+];
+
+async function loadRecommend() {
+  const season = document.getElementById('fSeason').value;
+  const soil = document.getElementById('fSoil').value;
+  const water = document.getElementById('fWater').value;
+  const drought = document.getElementById('fDrought').checked;
+
+  if (!USE_DEMO) {
+    // ── REAL API ────────────────────────────────────────────────────────────
+    try {
+      const params = new URLSearchParams();
+      if (season) params.set('season', season);
+      if (soil) params.set('soil_type', soil);
+      if (water) params.set('water_availability', water);
+      if (drought) params.set('drought_region', 'true');
+      params.set('top_n', '6');
+      const res = await fetch(`${BASE_URL}/api/recommend?${params}`);
+      const data = await res.json();
+      renderCrops(data.recommendations.map((c,i) => ({
+        name: c.crop, emoji: getCropEmoji(c.crop), days: c.growth_days,
+        profit: c.estimated_profit_inr_per_acre,
+        profitPct: Math.min(100, Math.round(c.estimated_profit_inr_per_acre/600)),
+        water: c.water_need, drought: c.drought_tolerant,
+        season: season || 'kharif', score: 100 - i*5,
+      })));
+      return;
+    } catch(e) { console.log('Recommend API failed, using demo'); }
+  }
+
+  // Demo filter
+  let filtered = CROPS.filter(c => {
+    if (season && !c.season.includes(season)) return false;
+    if (water === 'low' && c.water !== 'low') return false;
+    if (drought && !c.drought) return false;
+    return true;
+  });
+  if (!filtered.length) filtered = CROPS.slice(0, 4);
+  renderCrops(filtered);
+}
+
+function getCropEmoji(name) {
+  const map = {Tomato:'🍅',Potato:'🥔','Maize (Corn)':'🌽',Onion:'🧅',Groundnut:'🥜',Chilli:'🌶️',Rice:'🌾'};
+  return map[name] || '🌱';
+}
+
+function renderCrops(list) {
+  const grid = document.getElementById('cropGrid');
+  grid.innerHTML = list.map((c, i) => `
+    <div class="crop-card ${i === 0 ? 'featured' : ''}">
+      ${i === 0 ? '<div style="font-size:10px;padding:3px 10px;background:var(--green-light);color:var(--green-dark);border-radius:20px;display:inline-block;font-weight:500;margin-bottom:10px">⭐ Top Pick</div>' : ''}
+      <div class="crop-emoji">${c.emoji}</div>
+      <div class="crop-name">${c.name}</div>
+      <div class="crop-days">${c.days} days to harvest</div>
+      <div class="profit-bar"><div class="profit-fill" style="width:${c.profitPct}%"></div></div>
+      <div class="crop-profit">₹${(c.profit/1000).toFixed(0)}k <span class="profit-label">/ acre est. profit</span></div>
+      <div class="crop-tags">
+        <span class="crop-tag tag-season">${c.season.split(',')[0]}</span>
+        <span class="crop-tag tag-water">${c.water} water</span>
+        ${c.drought ? '<span class="crop-tag tag-drought">drought ok</span>' : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// ANALYTICS
+// ══════════════════════════════════════════════════════════════
+function renderAnalytics() {
+  const diseases = [
+    {name:'Late Blight', val:38, color:'#dc2626'},
+    {name:'Early Blight', val:24, color:'#d97706'},
+    {name:'Common Rust', val:18, color:'#f59e0b'},
+    {name:'Bacterial Spot', val:12, color:'#3b82f6'},
+    {name:'Healthy', val:8, color:'#22c55e'},
+  ];
+  document.getElementById('diseaseChart').innerHTML = diseases.map(d => `
+    <div class="bar-row">
+      <span class="bar-label">${d.name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${d.val}%;background:${d.color}"></div></div>
+      <span class="bar-val">${d.val}%</span>
+    </div>`).join('');
+
+  const risks = [
+    {crop:'Tomato', val:'HIGH', color:'#dc2626', bg:'#fee2e2', pct:38},
+    {crop:'Corn', val:'MED', color:'#d97706', bg:'#fef3c7', pct:22},
+    {crop:'Potato', val:'LOW', color:'#16a34a', bg:'#dcfce7', pct:8},
+  ];
+  document.getElementById('riskGauge').innerHTML = risks.map(r => `
+    <div class="gauge-item">
+      <div class="gauge-circle" style="color:${r.color};border-color:${r.color};background:${r.bg}">${r.val}</div>
+      <div class="gauge-name">${r.crop}</div>
+      <div class="gauge-val" style="color:${r.color}">${r.pct}%</div>
+    </div>`).join('');
+
+  const weekly = [{d:'Mon',v:18},{d:'Tue',v:24},{d:'Wed',v:31},{d:'Thu',v:22},{d:'Fri',v:28},{d:'Sat',v:15},{d:'Sun',v:4}];
+  document.getElementById('weeklyChart').innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:8px;height:90px">
+      ${weekly.map(w => `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="font-size:10px;color:var(--muted)">${w.v}</div>
+          <div style="width:100%;border-radius:4px 4px 0 0;background:${w.d==='Wed'?'var(--green)':'var(--green-light)'};height:${Math.round(w.v/31*70)}px"></div>
+          <div style="font-size:10px;color:var(--muted)">${w.d}</div>
+        </div>`).join('')}
+    </div>`;
+
+  const recs = [
+    {name:'Apply Mancozeb', cnt:42},
+    {name:'Neem Oil Spray', cnt:31},
+    {name:'Crop Rotation', cnt:28},
+    {name:'Drip Irrigation', cnt:19},
+  ];
+  document.getElementById('recChart').innerHTML = recs.map(r => `
+    <div class="bar-row">
+      <span class="bar-label">${r.name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(r.cnt/42*100)}%;background:var(--green-mid)"></div></div>
+      <span class="bar-val">${r.cnt}</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHATBOT
+// ══════════════════════════════════════════════════════════════
+const BOT_RESPONSES = {
+  'yellow': 'Yellow leaves usually mean Nitrogen deficiency or early fungal infection. Check older leaves first — if they\'re yellow from the bottom up, apply urea (25kg/acre). If yellowing has brown edges, spray Mancozeb fungicide every 7 days.',
+  'curl': 'Leaf curling is often caused by Tomato Leaf Curl Virus or water stress. Check for whiteflies (tiny white insects under leaves). If present, use imidacloprid spray + yellow sticky traps. If no pests, check your irrigation schedule.',
+  'brown': 'Brown spots indicate Early Blight (Alternaria) or Bacterial Spot. Concentric ring patterns → Early Blight, use Mancozeb. Water-soaked edges turning brown → Bacterial, use copper bactericide.',
+  'wilt': 'Wilting can mean overwatering, Fusarium wilt, or drought stress. Cut a stem — if you see brown discoloration inside, it\'s Fusarium. No chemical cure; remove affected plants and practice crop rotation next season.',
+  'kharif': 'Best Kharif crops for monsoon: Rice (clay soil, high water), Maize (versatile), Groundnut (high profit, drought tolerant), Soybean (black soil), Chilli (high value). Check the 🌾 Crop Advisor tab for your soil and water conditions!',
+  'rabi': 'Best Rabi crops for winter: Wheat (stable MSP), Potato (high yield, loamy soil), Tomato (cash crop), Onion (volatile but profitable), Chickpea (drought tolerant, nitrogen-fixer).',
+  'summer': 'For summer/Zaid season: Mung bean, Watermelon, Cucumber, Bitter gourd, Cluster beans. These are fast-maturing, heat-tolerant crops with good market demand. Ensure drip irrigation is available.',
+  'organic': 'Great organic options: Neem oil (3ml/L water) for pests and mild fungal diseases. Bordeaux mixture (copper sulfate + lime) for fungal/bacterial. Trichoderma for soil-borne diseases. Jeevamrut as soil health booster.',
+  'fungic': 'Key fungicides: Mancozeb (broad spectrum, preventive), Propiconazole (systemic, for rusts and blights), Copper-based/Bordeaux (organic-friendly), Azoxystrobin (premium, long-lasting). Always rotate between groups to prevent resistance.',
+  'pest': 'Common pests: Aphids → neem oil or insecticidal soap. Whiteflies → yellow sticky traps + imidacloprid. Thrips → spinosad + reflective mulch. Spider mites → Abamectin or neem oil in cool morning. Always spray in early morning to reduce bee harm.',
+  'water': 'Smart watering: Drip irrigation saves 40–60% water vs flood irrigation. Water at the base, never overhead. Sandy soil → frequent light watering. Clay soil → deep, less frequent. Check 3-inch soil depth before irrigating. Overwatering causes root rot and fungal disease!',
+  'soil': 'For soil health: Ideal pH is 6.0–7.0. Add compost every season. Practice crop rotation to prevent nutrient depletion. Trichoderma inoculation suppresses soil pathogens naturally. Get a soil test every 2–3 years for accurate fertilizer guidance.',
+  'nitrogen': 'For Nitrogen deficiency (pale/yellow older leaves, slow growth): Apply urea (46% N) at 25–30 kg/acre as top dressing, or DAP at base. Organic: green manure or compost. Foliar spray of 1% urea solution gives fast results.',
+  'late blight': 'Late Blight (Phytophthora infestans) is serious! Apply Mancozeb 2.5g/L immediately every 7 days. Remove and destroy infected plants. Avoid overhead irrigation. For organic: copper-based Bordeaux mixture. If humidity is high, increase spray frequency.',
+  'early blight': 'Early Blight (Alternaria solani) is common in hot humid weather. Spray Azoxystrobin or Mancozeb every 10 days. Remove infected lower leaves. Mulch soil to prevent spore splash. Rotate crops next season.',
+};
+
+async function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  addMsg(msg, 'user');
+  input.value = '';
+
+  if (!USE_DEMO) {
+    // ── REAL API CALL ──────────────────────────────────────────────────────
+    try {
+      const res = await fetch(`${BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, use_llm: true }),
+      });
+      const data = await res.json();
+      setTimeout(() => addMsg(data.response, 'bot'), 400);
+      return;
+    } catch(e) { console.log('Chat API failed, using demo'); }
+  }
+
+  // Demo rule-based
+  setTimeout(() => {
+    const m = msg.toLowerCase();
+    let response = null;
+    for (const [key, val] of Object.entries(BOT_RESPONSES)) {
+      if (m.includes(key)) { response = val; break; }
+    }
+    if (!response) response = "I'm not sure about that. Could you describe the symptoms more clearly? For example: leaf color, spots, wilting, or pests you can see. Or use the 📸 Scan tab to upload a photo for instant AI diagnosis!";
+    addMsg(response, 'bot');
+  }, 700);
+}
+
+function quickAsk(q) {
+  document.getElementById('chatInput').value = q;
+  sendMsg();
+}
+
+function addMsg(text, type) {
+  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const div = document.createElement('div');
+  div.className = `msg msg-${type}`;
+  div.innerHTML = `<div class="msg-bubble">${text}</div><div class="msg-time">${now}</div>`;
+  const messages = document.getElementById('chatMessages');
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+initDate();
+loadWeather();
+loadRecommend();
+</script>
+</body>
+</html>
