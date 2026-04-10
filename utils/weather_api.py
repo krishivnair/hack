@@ -29,7 +29,7 @@ async def get_weather(lat: float, lon: float) -> Optional[dict]:
     Returns:
         dict with weather context or None on failure
     """
-    api_key = os.getenv("OPENWEATHER_API_KEY")
+    api_key = os.getenv("bd5e378503939ddaee76f12ad7a97608")
     if not api_key:
         # Return mock data for development / if no key set
         return _mock_weather()

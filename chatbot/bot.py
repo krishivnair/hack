@@ -107,7 +107,7 @@ def get_llm_response(
     """
 
     # ── Gemini path ──────────────────────────────────────────────────────────
-    gemini_key = os.getenv("GEMINI_API_KEY")
+    gemini_key = os.getenv("AIzaSyDRM7bGUi4WT-8whagdfZhilI1jGE5d5oE")
     if gemini_key:
         try:
             import google.generativeai as genai
